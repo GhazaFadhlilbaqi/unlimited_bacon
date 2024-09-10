@@ -1,5 +1,9 @@
 # Unlimited Bacon
-pws link: 
+PWS link: 
+
+```
+https://pbp.cs.ui.ac.id/web/project/muhammad.ghaza31/baconunlimited
+```
 
 ## Assignment 2 
 
@@ -153,7 +157,11 @@ pws link:
     ```bash
     python manage.py runserver
     ```
-    - Then opening ```http://localhost:8000/``` in a browser
+    - Then open 
+    
+    ```bash
+    http://localhost:8000/
+    ```
 
 ### 2. Diagram:
 ![](static/images/diagram.png)
