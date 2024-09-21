@@ -452,7 +452,6 @@ Although both functions purpose are the same (redirecting users to a different u
     ```python
     response = HttpResponseRedirect(reverse('main:show_main'))
     # the reverse function returns the url of it's parameter
-    
     ```
 - ```redirect()```
     A more flexible redirection function which accepts direct urls, view names,  or even model instances. Example:
@@ -461,14 +460,299 @@ Although both functions purpose are the same (redirecting users to a different u
     return redirect('main:show_main')
     ```
 
-### 2. ```mood_entry``` link with ```User```
-
+### 2. ```MoodEntry``` link with ```User```
+The ```MoodEntry``` model can be linked to the built-in ```User``` model through a foreign key relationship. This relationship allows each mood entry to be associated with a specific user, enabling personalized data management.
 
 ### 3. Authentication vs Authorization
-
+**Authentication** refers to the process of confirming a user’s identity. In Django, this involves verifying whether the user attempting to access the application is actually who they claim to be. 
+**Authorization** deals with what a user is permitted to do once they have been authenticated. This process includes figuring out the rights and permissions assigned to each user.
 
 ### 4.  Use of Cookies
+- Django remembers logged-in users primarily through the use of **sessions** and **cookies**.
 
+- Other than that, cookies serve other various purposes, such as tracking user behavior for personalized experiences, remembering user   preferences like language and themes, remembering shopping carts contents on e-commerce sites, and even collecting analytics data on user engagement.
+
+- However, not all cookies are safe to use. Secure cookies can only be transmitted over HTTPS, HttpOnly cookies are inaccessible via JavaScript to mitigate XSS attacks, and SameSite cookies help prevent CSRF by restricting cross-origin requests. Additionally, third-party cookies may pose privacy risks as they track users across different sites. Therefore, while cookies enhance user experience, it’s crucial to implement them with security best practices to protect user data and privacy.
 
 ### 5. Steps:
-1. 
+1. Implement the **Registration** feature by:
+    - Importing ```UserCreationForm``` and ```messages``` to ```views.py```:
+
+    ```python
+    from django.contrib.auth.forms import UserCreationForm
+    from django.contrib import messages
+    ```
+
+    - Adding a ```register``` function in the same file:
+
+    ```python
+    def register(request):
+        form = UserCreationForm()
+
+        if request.method == 'POST':
+            form = UserCreationForm(request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Your account has been successfully created!')
+                return redirect('main:login')
+        context = {'form': form}   
+        return render(request, 'register.html', context)
+    ```
+
+    - Create the HTML template for registration in ```main/templates``` called ```register.html```:
+
+    ```html
+    {% extends 'base.html' %} {% block meta %}
+    <title>Register</title>
+    {% endblock meta %} {% block content %}
+
+    <div class="login">
+    <h1>Register</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        <table>
+        {{ form.as_table }}
+        <tr>
+            <td></td>
+            <td><input type="submit" name="submit" value="Register" /></td>
+        </tr>
+        </table>
+    </form>
+
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    </div>
+
+    {% endblock content %}
+    ```
+
+    - Route ```registration``` in ```urls.py``` in the ```main``` directory:
+
+    ```python
+    from main.views import register
+    ...
+    urlpatterns = [
+    ...
+    path('register/', register, name='register'),
+    ]
+    ```
+
+2. Implementing the **Login** feature by:
+    - Importing ```AuthenticationForm```, ```authenticate```, and ```login``` in ```views.py```:
+
+    ```python
+    from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+    from django.contrib.auth import authenticate, login
+    ```
+
+    - Add the ```login_user``` function: 
+
+    ```python
+    def login_user(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+
+        if form.is_valid():
+                user = form.get_user()
+                login(request, user)
+                response  = HttpResponseRedirect(reverse('main:show_main'))
+                response.set_cookie('last_login', str(datetime.datetime.now()))
+                return response
+
+    else:
+        form = AuthenticationForm(request)
+    context = {'form': form}
+    return render(request, 'login.html', context)
+    ```
+
+    - Create the HTML file for the login page in ```main/templates``` with the file name ```login.html```
+
+    ```html
+    {% extends 'base.html' %} {% block meta %}
+    <title>Register</title>
+    {% endblock meta %} {% block content %}
+
+    <div class="login">
+    <h1>Register</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        <table>
+        {{ form.as_table }}
+        <tr>
+            <td></td>
+            <td><input type="submit" name="submit" value="Register" /></td>
+        </tr>
+        </table>
+    </form>
+
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    </div>
+
+    {% endblock content %}
+    ```
+
+    - Route the login function in ```urls.py``` at the ```main``` directory
+
+    ```python
+    from main.views import login_user
+    ...
+    urlpatterns = [
+    ...
+    path('login/', login_user, name='login'),
+    ]
+    ```
+
+3. Implementing the **Logout** feature by:
+
+    - Importing ```logout``` to ```views.py```:
+
+    ```python
+    from django.contrib.auth import logout
+    ```
+
+    - Adding the ```logout_user``` function in the same file:
+
+    ```python
+    def logout_user(request):
+        logout(request)
+        response = HttpResponseRedirect(reverse('main:login'))
+        response.delete_cookie('last_login')
+        return response
+    ```
+
+    - Adding a ```logout``` button in the ```main.html``` file in ```main/templates```:
+    
+    ```html
+    <a href="{% url 'main:logout' %}">
+        <button>Logout</button>
+    </a>
+    ```
+
+4. Restricting access to main page by:
+    - Import ```login_required``` to ```views.py```
+
+    ```python
+    from django.contrib.auth.decorators import login_required
+    ```
+
+    - Add the ```login_required``` decorator above the ```show_main``` function in the same file:
+
+    ```python
+    ...
+    @login_required(login_url='/login')
+    def show_main(request):
+    ...
+    ```
+
+5. Connecting ```UnlimitedBacon``` and ```User``` by:
+    - Importing ```User``` to ```models.py:
+
+    ```python
+    ...
+    from django.contrib.auth.models import User
+    ...
+    ```
+    - Adding ```user``` variable in ```UnlimitedBacon``` model:
+
+    ```python
+    class UnlimitedBacon(models.Model):
+        user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ...
+    ```
+    - Modify the ```create_bacon_entry``` function in ```views.py```:
+
+    ```python
+    def create_bacon_entry(request):
+        form = UnlimitedBaconForm(request.POST or None)
+
+        if form.is_valid() and request.method == "POST":
+            product_entry = form.save(commit=False)
+            product_entry.user = request.user
+            product_entry.save()
+            return redirect('main:show_main')
+        
+        context = {'form': form}
+        return render(request, 'create_bacon_entry.html', context)
+    ```
+    - Modify the ```product_entries``` variable in ```views.py```:
+
+    ```python
+    def show_main(request):
+        product_entries = UnlimitedBacon.objects.filter(user=request.user)
+    ```
+    - Run model migrations as usual
+    - Modify the ```settings.py``` file by importing ```os``` and changing the ```DEBUG``` variable to:
+    
+    ```python
+    import os
+    ...
+    PRODUCTION = os.getenv('PRODUCTION', False)
+    DEBUG = not PRODUCTION
+    ...
+    ```
+
+6. Implementing Cookies by:
+    - Importing ```datetime```, ```HttpResponseRedirect```, and ```reverse``` to ```views.py```
+
+    ```python
+    import datetime
+    from django.http import HttpResponseRedirect
+    from django.urls import reverse
+    ```
+    - Modify the ```login_user``` function with:
+
+    ```python
+    if form.is_valid():
+        user = form.get_user()
+        login(request, user)
+        response = HttpResponseRedirect(reverse("main:show_main"))
+        response.set_cookie('last_login', str(datetime.datetime.now()))
+        return response
+    ```
+    - Add the ```last_login``` variable in the ```show_main``` function in the same file
+
+    ```python
+    context = {
+        'app_name' : 'Unlimited Bacon',
+        'name': request.user.username,
+        'class': 'PBP KKI',
+        'product_entries': product_entries,
+        'last_login': request.COOKIES['last_login'],
+    }
+    ```
+    - Modifying the ```logout_user``` function in the same file
+
+    ```python
+    def logout_user(request):
+        logout(request)
+        response = HttpResponseRedirect(reverse('main:login'))
+        response.delete_cookie('last_login')
+        return response
+    ```
+    - Add the display for the ```last login``` data in the ```main.html``` file
+
+    ```html
+    ...
+    <h5>Last login session: {{ last_login }}</h5>
+    ...
+    ```
+
+7. And of course, testing the site in the [localhost](http://localhost:8000/) with:
+
+    ```bash
+    python manage.py runserver
+    ```
+DONE!!! d==(￣▽￣*)b
