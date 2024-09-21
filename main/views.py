@@ -28,9 +28,9 @@ def create_bacon_entry(request):
     form = UnlimitedBaconForm(request.POST or None)
 
     if form.is_valid() and request.method == "POST":
-            product_entries = form.save(commit=False)
-            product_entries.user = request.user
-            product_entries.save()
+            product_entry = form.save(commit=False)
+            product_entry.user = request.user
+            product_entry.save()
             return redirect('main:show_main')
         
     context = {'form': form}
