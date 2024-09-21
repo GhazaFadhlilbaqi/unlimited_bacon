@@ -12,7 +12,7 @@ from django.urls import reverse
 
 @login_required(login_url='/login')
 def show_main(request):
-    product_entries = UnlimitedBacon.objects.all()
+    product_entries = UnlimitedBacon.objects.filter(user=request.user)
 
     context = {
         'app_name' : 'Unlimited Bacon',
@@ -28,9 +28,9 @@ def create_bacon_entry(request):
     form = UnlimitedBaconForm(request.POST or None)
 
     if form.is_valid() and request.method == "POST":
-            bacon_entry = form.save(commit=False)
-            bacon_entry.user = request.user
-            bacon_entry.save()
+            product_entries = form.save(commit=False)
+            product_entries.user = request.user
+            product_entries.save()
             return redirect('main:show_main')
         
     context = {'form': form}

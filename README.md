@@ -441,3 +441,34 @@ o(*￣▽￣*)o DONE!!!
 
 4. **JSON by ID**
 ![](static/images/jsonById.png)
+
+## Assignment 4
+
+### 1. ```HttpResponseRedirect()``` Vs ```redirect()```
+Although both functions purpose are the same (redirecting users to a different url), they function quite differently
+- ```HttpResponseRedirect()```
+    Only accepts a full direct URL for redirection. Example:
+
+    ```python
+    response = HttpResponseRedirect(reverse('main:show_main'))
+    # the reverse function returns the url of it's parameter
+    
+    ```
+- ```redirect()```
+    A more flexible redirection function which accepts direct urls, view names,  or even model instances. Example:
+
+    ```python
+    return redirect('main:show_main')
+    ```
+
+### 2. ```mood_entry``` link with ```User```
+
+
+### 3. Authentication vs Authorization
+
+
+### 4.  Use of Cookies
+
+
+### 5. Steps:
+1. 
