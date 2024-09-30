@@ -1,20 +1,46 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
+{% load static %}
+{% block meta %}
+<title>Create Product</title>
+{% endblock meta %}
+
 {% block content %}
 {% include 'navbar.html' %}
+<div class="min-h-screen flex flex-col items-center justify-center w-screen bg-[#F5EEDC] relative">
+    <!-- Main content area -->
+    <div class="container mx-auto px-4 py-8 mt-16 max-w-xl">
+        <h1 class="text-3xl font-bold text-center mb-8 text-Gray">Create Products</h1>
 
-<h1>Add New Product Entry</h1>
+        <div class="bg-[#FFFFFF] rounded-lg p-6 form-style">
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="flex flex-col">
+                    <label for="{{ field.id_for_label }}" class="mb-2 font-semibold text-gray-700">
+                        {{ field.label }}
+                    </label>
+                    <div class="w-full">
+                        {{ field }}
+                    </div>
+                    {% if field.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <div class="flex justify-center mt-6">
+                <button type="submit" class="bg-[#dc143c] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#B51233] transition duration-300 ease-in-out w-full">
+                    Create Product
+                </button>
+            </div>
+        </form>
+        </div>
+    </div>
+    <!-- Side Checkered Patters -->
+    <div class="absolute top-0 right-0 bottom-0 w-1/6 bg-[conic-gradient(#F5EEDC_25%,#dc143c_25%_50%,#F5EEDC_50%_75%,#dc143c_75%)] bg-[size:96px_96px]"></div>
+    <div class="absolute top-0 left-0 bottom-0 w-1/6 bg-[conic-gradient(#F5EEDC_25%,#dc143c_25%_50%,#F5EEDC_50%_75%,#dc143c_75%)] bg-[size:96px_96px]"></div>
 
-<form method="POST">
-  {% csrf_token %}
-  <table>
-    {{ form.as_table }}
-    <tr>
-      <td></td>
-      <td>
-        <input type="submit" value="Add Product" />
-      </td>
-    </tr>
-  </table>
-</form>
-
+</div>
 {% endblock %}

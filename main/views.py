@@ -19,7 +19,7 @@ def show_main(request):
         'name': request.user.username,
         'class': 'PBP KKI',
         'product_entries': product_entries,
-        'last_login': request.COOKIES['last_login'],
+        'last_login': request.COOKIES.get('last_login', 'Not set'),
     }
 
     return render(request, "main.html", context)
@@ -70,10 +70,11 @@ def login_user(request):
 
       if form.is_valid():
             user = form.get_user()
-            login(request, user)
-            response  = HttpResponseRedirect(reverse('main:show_main'))
-            response.set_cookie('last_login', str(datetime.datetime.now()))
-            return response
+            if user is not None:
+                login(request, user)
+                response  = HttpResponseRedirect(reverse('main:show_main'))
+                response.set_cookie('last_login', str(datetime.datetime.now()))
+                return response
 
    else:
       form = AuthenticationForm(request)

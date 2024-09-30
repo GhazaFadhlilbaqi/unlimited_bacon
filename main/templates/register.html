@@ -1,28 +1,96 @@
-{% extends 'base.html' %} {% block meta %}
+{% extends 'base.html' %}
+
+{% block meta %}
 <title>Register</title>
-{% endblock meta %} {% block content %}
+{% endblock meta %}
 
-<div class="login">
-  <h1>Register</h1>
+{% block content %}
+<!-- Checkered Pattern -->
+<div class="min-h-screen flex items-center justify-center w-screen bg-[#F5EEDC] border-[#dc143c] border-8 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md mx-auto w-full bg-[#dc143c] p-8 rounded-lg shadow-lg space-y-8 form-style">
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-[#F5EEDC]">
+        REGISTER
+      </h2>
+    <form class="mt-8 space-y-6" method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="remember" value="true">
+      <div class="rounded-md shadow-sm -space-y-px">
+        {% for field in form %}
+          <div class="{% if not forloop.first %}mt-4{% endif %}">
+            <label for="{{ field.id_for_label }}" class="mb-2 font-semibold text-white">
+              {{ field.label }}
+            </label>
+            <div class="relative">
+              {{ field }}
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                {% if field.errors %}
+                  <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                {% endif %}
+              </div>
+            </div>
+            {% if field.errors %}
+              {% for error in field.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+              {% endfor %}
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
 
-  <form method="POST">
-    {% csrf_token %}
-    <table>
-      {{ form.as_table }}
-      <tr>
-        <td></td>
-        <td><input type="submit" name="submit" value="Register" /></td>
-      </tr>
-    </table>
-  </form>
+      <div>
+        <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-[#dc143c] bg-[#F5EEDC] hover:bg-[#DED7C7] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500">
+          Register
+        </button>
+      </div>
+    </form>
 
-  {% if messages %}
-  <ul>
-    {% for message in messages %}
-    <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+    {% if messages %}
+    <div class="mt-4">
+      {% for message in messages %}
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <span class="block sm:inline">{{ message }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+      <p class="text-sm text-black">
+        Already have an account?
+        <a href="{% url 'main:login' %}" class="font-medium text-cyan-300 hover:text-cyan-400">
+          Login here
+        </a>
+      </p>
+    </div>
+  </div>
 </div>
-
 {% endblock content %}
+
+<style>
+  @media (min-width: 640px) { /* Small devices (tablets) */
+    .bg-checkered {
+      background-size: 40px 40px;
+      height: 200px; /* Adjust height as needed */
+    }
+  }
+
+  @media (min-width: 768px) { /* Medium devices (desktops) */
+    .bg-checkered {
+      height: 150px; /* Adjust height as needed */
+    }
+  }
+
+  @media (min-width: 1024px) { /* Large devices (larger desktops) */
+    .bg-checkered {
+      height: 100px; /* Adjust height as needed */
+    }
+  }
+
+  @media (max-width: 639px) { /* Extra small devices (phones) */
+    .bg-checkered {
+      height: 250px; /* Adjust height as needed */
+    }
+  }
+</style>
