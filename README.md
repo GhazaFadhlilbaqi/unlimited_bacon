@@ -1389,3 +1389,247 @@ The difference between Margin, Padding, and Border lies in their placement and p
     ```
 
 DONE!!!人(￣︶￣〃)
+
+## Assignment 6
+
+### 1. Benefits of JavaSript:
+There are various benefits of using JavaScript for web development,
+- Dynamic Interactivity: It enables the creation of engaging web pages with features like animations and responsive buttons. Users can interact with the content without the need to reload the entire page, enhancing the overall experience.
+
+- Asynchronous Programming: With support for asynchronous operations through AJAX and the fetch() API, JavaScript allows data to be retrieved from the server dynamically. This means users can enjoy real-time updates without interruptions.
+
+- Frontend Validation: JavaScript performs client-side input validation, catching errors before they reach the server. This helps reduce the number of issues and improves the quality of data submitted.
+
+- Cross-Platform Compatibility: JavaScript runs seamlessly across all modern browsers, ensuring consistent functionality and performance on various devices and platforms.
+
+- Client-Side Processing: By handling processes in the browser, JavaScript reduces the load on servers, leading to faster response times for user
+
+### 2. Purpose of ```await```
+Using ```await``` with ```fetch()``` is important because it pauses the execution of an async function until the Promise returned by ```fetch()``` resolves, allowing you to directly access the response. If you don’t use await, **the code continues executing immediately**, leading to potential issues where you may try to use the response before it's available, resulting in undefined or incorrect values. This can complicate your code as you'd have to manage the Promise with ```.then()``` and ```.catch()```, making it harder to read and maintain.
+
+### 3. Purpose of ```csfr_exempt```
+The ```@csrf_exempt``` decorator is employed to disable CSRF checks on a specific view, and it's especially useful in certain situations. 
+One scenario is when the AJAX request comes from a trusted source, such as parts of the application accessible only to authenticated users. 
+Another important use is to prevent request failures; without this decorator, Django will reject AJAX POST requests that lack a CSRF token, which can disrupt functionality.
+
+### 4. Front-end sanitization
+Input data cleansing is essential in the backend for several reasons. 
+First, it ensures consistent validation regardless of the source, protecting against malicious inputs that might bypass frontend checks. 
+Second, it adds a crucial layer of security, as users can manipulate client-side code. 
+Third, backend cleansing maintains data integrity by ensuring only valid data is stored in the database. 
+Last but not least, relying solely on frontend validation can lead to inconsistent user experiences, making backend checks vital for a reliable application.
+
+### 5. Steps:
+1. AJAX GET:
+    - Delete the ```product_entries``` variables in the ```show_main``` function in ```views.py```
+
+    ```python
+    @login_required(login_url='/login')
+    #product_entries = UnlimitedBacon.objects.filter(user=request.user) <---- Delete this line!
+    def show_main(request):
+        context = {
+            'app_name' : 'Unlimited Bacon',
+            'name': request.user.username,
+            'class': 'PBP KKI',
+            #'product_entries': product_entries, <---- Delete this line!
+            'last_login': request.COOKIES.get('last_login', 'Not set'),
+        }
+
+        return render(request, "main.html", context)
+    ```
+    - Modify the ```show_json``` and ```show_xml``` functions in ```views.py``` to:
+
+    ```python
+        def show_xml(request):
+            data = UnlimitedBacon.objects.filter(user=request.user)
+            return HttpResponse(serializers.serialize('xml', data), content_type='application/xml')
+
+        def show_json(request):
+            data = UnlimitedBacon.objects.filter(user=request.user)
+            return HttpResponse(serializers.serialize('json', data), content_type='application/json')
+    ```
+
+    - Modify the ```main.html``` file by replacing the if statement with:
+
+    ```HTML
+        <div id="product_entry_cards"></div>
+        {% csrf_token %}
+    ```
+    - Add the following script in ```main.html```:
+
+    ```HTMl
+        <script>
+        async function getProductEntries() {
+            return fetch("{% url 'main:show_json' %}").then((res) => res.json())
+        }
+        ...
+        </script> 
+    ```
+
+2. AJAX POST:
+    - Create an add product with ajax button in ```main.html```:
+
+    ```HTML
+    <div class="flex justify-end mb-6">
+        <button data-modal-target="crudModal" data-modal-toggle="curdModal" class="btn bg-[#dc143c] hover:bg-[#C1144B] text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105" onclick="showModal();">
+        Add Product by AJAX
+        </button>
+    </div>
+    ```
+    - Add a new function in ```views.py``` called ```add_product_entry_ajax``` as well as importing ```csfr_exempt``` and ```require_POST```:
+
+    ```python
+    from django.views.decorators.http import require_POST
+    from django.utils.html import strip_tags
+    ...
+
+    @csrf_exempt
+    @require_POST
+    def add_product_entry_ajax(request):
+        name = strip_tags(request.POST.get('name'))
+        price = request.POST.get('price')
+        description = strip_tags(request.POST.get('description'))
+        stock = request.POST.get('stock')
+        user = request.user
+
+        new_product = UnlimitedBacon(
+            name=name, 
+            price=price, 
+            description=description, 
+            stock=stock, 
+            user=user
+        )
+        new_product.save()
+
+        return HttpResponse(b"CREATED", status=201)
+    ```
+    - Route the new function to ```urls.py``` in ```main/templates```:
+
+    ```python
+    from main.views import add_product_entry_ajax
+    ...
+    urlpatterns = [
+        path('add-product-entry-ajax', add_product_entry_ajax, name='add_product_entry_ajax'),
+    ]
+    ```
+
+    - Connect the form inside the modals
+
+    ```html
+    <div id="product_entry_cards"></div>
+    {% csrf_token %}
+
+    <div id="crudModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 w-full flex items-center justify-center bg-gray-800 bg-opacity-50 overflow-x-hidden overflow-y-auto transition-opacity duration-300 ease-out">
+        <div id="crudModalContent" class="relative bg-[#F5EEDC] rounded-lg shadow-lg w-5/6 sm:w-3/4 md:w-1/2 lg:w-1/3 mx-4 sm:mx-0 transform scale-95 opacity-0 transition-transform transition-opacity duration-300 ease-out">
+        <!-- Modal header -->
+        <div class="flex items-center justify-between p-4 border-b rounded-t">
+            <h3 class="text-xl font-semibold text-gray-900">
+            Add New Product
+            </h3>
+            <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center" id="closeModalBtn">
+            <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="sr-only">Close modal</span>
+            </button>
+        </div>
+        <!-- Modal body -->
+        <div class="px-6 py-4 space-y-6 form-style">
+            <form id="productEntryForm">
+            <div class="mb-4">
+                <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
+                <input type="text" id="name" name="name" class="mt-1 block w-full border border-gray-300 rounded-md p-2 hover:border-[#dc143c]" placeholder="Enter Product Name" required>
+            </div>
+            <div class="mb-4">
+                <label for="price" class="block text-sm font-medium text-gray-700">Price</label>
+                <input type="number" name="price" min="1" class="mt-1 block w-full border border-gray-300 rounded-md p-2 hover:border-[#dc143c]" required>
+            </div>
+            <div class="mb-4">
+                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <textarea id="description" id="description" name="description" rows="3" class="mt-1 block w-full h-52 resize-none border border-gray-300 rounded-md p-2 hover:border-[#dc143c]" placeholder="Enter Product Description" required></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="stock" class="block text-sm font-medium text-gray-700">Stock</label>
+                <input type="number" name="stock" class="mt-1 block 2-full border border-gray-300 rounded-md p-2 hover:border-[#dc143c]" required>
+            </div>
+            </form>
+        </div>
+        <!-- Modal footer -->
+        <div class="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2 p-6 border-t border-gray-200 rounded-b justify-center md:justify-end">
+            <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg" id="cancelButton">Cancel</button>
+            <button type="submit" id="submitProductEntry" form="productEntryForm" class="bg-[#dc143c] hover:bg-[#C1144B] text-white font-bold py-2 px-4 rounded-lg">Save</button>
+        </div>
+        </div>
+    </div>
+    ...
+    ```
+    - Implementing an asynchronous ```refreshProductEntries``` function in ```main.html```
+
+    ```HTML
+    <script>
+    async function refreshProductEntries() {
+        document.getElementById("product_entry_cards").innerHTML = "";
+        document.getElementById("product_entry_cards").className = "";
+        const productEntries = await getProductEntries();
+        let htmlString = "";
+        let classNameString = "";
+
+        if (productEntries.length === 0) {
+        classNameString = "flex flex-col items-center justify-center min-h-[24rem] p-6"
+        htmlString= `
+            <div class="flex flex-col items-center justify-center min-h-[24rem] p-6">
+                <img src="{% static 'images/sadge.png' %}" alt="Sad face" class="w-120 h-50 mb-4"/>
+                <p class="text-center text-gray-600 mt-4">There are no products available.</p>
+            </div>
+        `;
+        }
+    
+        else {
+        classNameString = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full";
+            productEntries.forEach((item) => {
+            const name = DOMPurify.sanitize(item.fields.name);
+            const description = DOMPurify.sanitize(item.fields.description);
+            htmlString += `
+                <div class="relative break-inside-avoid">
+                <div class="relative top-5 bg-[#f5eedc] shadow-md rounded-lg mb-6 break-inside-avoid flex flex-col border-8 border-[#dc143c] transform rotate-1 hover:rotate-0 transition-transform duration-300"
+                    style="box-shadow: 8px 8px 0px #dc143c;">
+                    
+                    <div class="bg-[#dc143c] text-white p-4 border-2 border-[#dc143c] h-40 flex items-center justify-center">
+                    <h2 class="text-center font-bold text-3xl mb-2">${name}</h2>
+                    </div>
+
+                    <div class="p-4">
+                    <h3 class="font-bold text-2xl text-[#dc143c] mb-1">${item.fields.name}</h3>
+                    <p class="text-[#dc143c] text-lg mb-2">${item.fields.price}.99</p>
+                    <p class="text-sm text-[#dc143c]">${description}</p>
+                    </div>
+
+                    <div class="text-sm p-4">
+                    Stock: ${item.fields.stock}
+                    </div>
+                </div>
+
+                <div class="absolute top-0 -right-4 flex space-x-1">
+                    <a href="/edit_product/${item.pk}" class="bg-[#f5eedc] hover:bg-[#E7CAB9] text-[#dc143c] rounded-full p-2 transition duration-300 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                    </a>
+                    <a href="/delete/${item.pk}" class="bg-[#f5eedc] hover:bg-red-600 text-[#dc143c] hover:text-[#f5eedc] rounded-full p-2 transition duration-300 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    </a>
+                </div>
+                </div>
+            `;
+        });
+    }
+    document.getElementById("product_entry_cards").className = classNameString;
+    document.getElementById("product_entry_cards").innerHTML = htmlString;
+    }
+    refreshProductEntries();
+    </script>
+    ```
+
+DONE!!! o(*￣▽￣*)ブ

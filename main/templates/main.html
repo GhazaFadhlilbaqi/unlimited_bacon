@@ -190,6 +190,7 @@ function addProductEntry() {
     if (response.ok) {
       refreshProductEntries();
       form.reset();
+      hideModal();
     } else {
       alert('Failed to add product.');
     }
@@ -201,7 +202,6 @@ function addProductEntry() {
 
   return false;
 }
-
 
   document.getElementById("productEntryForm").addEventListener("submit", (e) => {
     e.preventDefault();
